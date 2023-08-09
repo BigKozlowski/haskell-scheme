@@ -3,6 +3,13 @@ import Text.ParserCombinators.Parsec
 import Numeric (readBin, readOct, readHex)
 import LispTypes
 
+parseExactNumber :: Parser LispVal
+parseExactNumber = parseDec
+    <|> parseDec'
+    <|> parseBin 
+    <|> parseOct 
+    <|> parseHex
+
 parseDec :: Parser LispVal
 parseDec = many1 digit >>= (return . Number . Int . read)
 

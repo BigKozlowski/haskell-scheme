@@ -7,6 +7,7 @@ data LispVal = Atom String
              | Fractal Double
              | String String
              | Bool Bool
+             | Character Char
 
 data LispNum = Int Integer
              | Short Float

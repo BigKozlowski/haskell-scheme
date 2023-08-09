@@ -5,7 +5,7 @@ import Data.List (intercalate)
 import Data.Functor ((<&>))
 import Control.Monad (liftM)
 import Numeric (readOct, readBin, readDec, readHex)
-import ParseNumbers (parseDec, parseHex, parseDec', parseBin, parseOct)
+import ParseNumbers (parseExactNumber)
 import LispTypes
 
 readExpr :: String -> String
@@ -14,10 +14,11 @@ readExpr input = case parse parseExpr "lisp" input of
     Right val -> "Found value: " ++ showLisp val
 
 parseExpr :: Parser LispVal
-parseExpr = parseNumber 
-    <|> parseAtom 
-    <|> parseString
-    <|> parseBool
+parseExpr = parseAtom 
+    <|> parseString 
+    <|> try parseNumber
+    <|> try parseBool
+    <|> try parseCharacter
 
 parseString :: Parser LispVal
 parseString = do
@@ -45,15 +46,18 @@ parseBool = do
 parseNumber :: Parser LispVal
 parseNumber = parseExactNumber 
 
-parseExactNumber :: Parser LispVal
-parseExactNumber = parseDec
-    <|> parseDec'
-    <|> parseBin 
-    <|> parseOct 
-    <|> parseHex
+parseCharacter :: Parser LispVal
+parseCharacter = do
+    try $ string "#\\"
+    val <- try (string "newline" <|> string "space")
+        <|> do {x <- anyChar; notFollowedBy alphaNum ; return [x]}
+    return $ Character $ case val of
+        "space" -> ' '
+        "newline" -> '\n'
+        _ -> head val
 
 symbol :: Parser Char
-symbol = oneOf "!$%&|*+ -/: <=? >@^_~#"
+symbol = oneOf "!$%&|*+-/:<=>?@^_~"
 
 spaces :: Parser ()
 spaces = skipMany1 space
@@ -76,3 +80,4 @@ showLisp (Atom a) = "Atom: " ++ a
 showLisp (Number n) = "Number: " ++ show n
 showLisp (String s) = "String: " ++ s
 showLisp (Bool b) = "Bool: " ++ show b
+showLisp (Character c) = "Char: " ++ [c]
