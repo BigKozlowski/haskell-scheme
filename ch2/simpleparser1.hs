@@ -14,19 +14,23 @@ readExpr input = case parse parseExpr "lisp" input of
     Right val -> "Found value: " ++ showLisp val
 
 parseExpr :: Parser LispVal
-parseExpr = parseAtom 
-    <|> parseString 
-    <|> try parseComplexNumber
-    <|> try parseFloatNumber
-    <|> try parseRationalNumber
+parseExpr = parseAtom
+    <|> parseString
     <|> try parseNumber
+    <|> parseQuoted
     <|> try parseBool
     <|> try parseCharacter
+    <|> do 
+        char '('
+        x <- try parseList <|> parseDottedList
+        char ')'
+        return x
+
 
 parseString :: Parser LispVal
 parseString = do
     char '"'
-    x <- many $ many1 (noneOf "\"\\") <|> escapedChars 
+    x <- many $ many1 (noneOf "\"\\") <|> escapedChars
     char '"'
     return $ String $ concat x
 
@@ -40,11 +44,14 @@ parseAtom = do
 parseBool :: Parser LispVal
 parseBool = do
     char '#'
-    (char 't' >> return (Bool True)) 
+    (char 't' >> return (Bool True))
         <|> (char 'f' >> return (Bool False))
 
 parseNumber :: Parser LispVal
-parseNumber = parseExactNumber 
+parseNumber = try parseComplexNumber
+    <|> try parseFloatNumber
+    <|> try parseRationalNumber
+    <|> try parseExactNumber
 
 parseCharacter :: Parser LispVal
 parseCharacter = do
@@ -55,6 +62,21 @@ parseCharacter = do
         "space" -> ' '
         "newline" -> '\n'
         _ -> head val
+
+parseList :: Parser LispVal
+parseList = liftM List $ sepBy parseExpr spaces
+
+parseDottedList :: Parser LispVal
+parseDottedList = do
+    head <- endBy parseExpr spaces
+    tail <- char '.' >> spaces >> parseExpr
+    return $ DottedList head tail
+
+parseQuoted :: Parser LispVal
+parseQuoted = do
+    char '\''
+    x <- parseExpr
+    return $ List [Atom "quote", x]
 
 symbol :: Parser Char
 symbol = oneOf "!$%&|*+-/:<=>?@^_~"
@@ -74,8 +96,8 @@ escapedChars = do
         'r' -> do return "\r"
 
 showLisp :: LispVal -> String
-showLisp (DottedList l v) = "Dotted list: " ++ showLisp (List l) ++ showLisp v
-showLisp (List l) = "List: " ++ (intercalate ", " $ map showLisp l)
+showLisp (DottedList l v) = "Dotted list: " ++ showLisp (List l) ++ ", " ++ showLisp v
+showLisp (List l) = "List: " ++ "(" ++ (intercalate ", " $ map showLisp l) ++ ")"
 showLisp (Atom a) = "Atom: " ++ a
 showLisp (Number n) = "Number: " ++ show n
 showLisp (String s) = "String: " ++ s
