@@ -52,8 +52,6 @@ parseExactNumber = parseDec
     <|> parseOct 
     <|> parseHex
 
-
-
 symbol :: Parser Char
 symbol = oneOf "!$%&|*+ -/: <=? >@^_~#"
 
