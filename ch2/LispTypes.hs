@@ -8,6 +8,8 @@ data LispVal = Atom String
              | String String
              | Bool Bool
              | Character Char
+             | Rational Integer Integer
+             | Complex Float Float
 
 -- data LispNum = Int Integer
 --              | Short Float

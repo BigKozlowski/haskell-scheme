@@ -5,7 +5,7 @@ import Data.List (intercalate)
 import Data.Functor ((<&>))
 import Control.Monad (liftM)
 import Numeric (readOct, readBin, readDec, readHex)
-import ParseNumbers (parseExactNumber, parseFloatNumber)
+import ParseNumbers (parseExactNumber, parseFloatNumber, parseRationalNumber, parseComplexNumber)
 import LispTypes
 
 readExpr :: String -> String
@@ -16,7 +16,9 @@ readExpr input = case parse parseExpr "lisp" input of
 parseExpr :: Parser LispVal
 parseExpr = parseAtom 
     <|> parseString 
+    <|> try parseComplexNumber
     <|> try parseFloatNumber
+    <|> try parseRationalNumber
     <|> try parseNumber
     <|> try parseBool
     <|> try parseCharacter
@@ -80,3 +82,5 @@ showLisp (String s) = "String: " ++ s
 showLisp (Bool b) = "Bool: " ++ show b
 showLisp (Character c) = "Char: " ++ [c]
 showLisp (Float f) = "Float: " ++ show f
+showLisp (Complex r i) = "Complex: " ++ show r ++ "+" ++ show i ++ "i"
+showLisp (Rational n d) = "Rational: " ++ show n ++ "/" ++ show d
