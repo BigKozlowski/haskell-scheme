@@ -5,7 +5,7 @@ import Data.List (intercalate)
 import Data.Functor ((<&>))
 import Control.Monad (liftM)
 import Numeric (readOct, readBin, readDec, readHex)
-import ParseNumbers (parseExactNumber)
+import ParseNumbers (parseExactNumber, parseFloatNumber)
 import LispTypes
 
 readExpr :: String -> String
@@ -16,6 +16,7 @@ readExpr input = case parse parseExpr "lisp" input of
 parseExpr :: Parser LispVal
 parseExpr = parseAtom 
     <|> parseString 
+    <|> try parseFloatNumber
     <|> try parseNumber
     <|> try parseBool
     <|> try parseCharacter
@@ -81,3 +82,4 @@ showLisp (Number n) = "Number: " ++ show n
 showLisp (String s) = "String: " ++ s
 showLisp (Bool b) = "Bool: " ++ show b
 showLisp (Character c) = "Char: " ++ [c]
+showLisp (Float f) = "Float: " ++ show f

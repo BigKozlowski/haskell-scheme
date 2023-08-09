@@ -1,6 +1,6 @@
 module ParseNumbers where
 import Text.ParserCombinators.Parsec
-import Numeric (readBin, readOct, readHex)
+import Numeric (readBin, readOct, readHex, readFloat)
 import LispTypes
 
 parseExactNumber :: Parser LispVal
@@ -10,14 +10,21 @@ parseExactNumber = parseDec
     <|> parseOct 
     <|> parseHex
 
+parseFloatNumber :: Parser LispVal
+parseFloatNumber = do
+    i <- many1 digit
+    char '.'
+    f <- many1 digit
+    return $ Float $ fst . head $ readFloat $ i ++ "." ++ f
+
 parseDec :: Parser LispVal
-parseDec = many1 digit >>= (return . Number . Int . read)
+parseDec = many1 digit >>= (return . Number . read)
 
 parseDec' :: Parser LispVal
 parseDec' = do 
     try $ string "#d"
     num <- many1 digit
-    (return . Number . Int . read) num
+    (return . Number . read) num
 
 parseBin :: Parser LispVal
 parseBin = do
@@ -38,6 +45,6 @@ parseHex = do
     return $ Number (hex2dig num)
 
 
-bin2dig = Int . fst . head . readBin
-oct2dig = Int . fst . head . readOct
-hex2dig = Int . fst . head . readHex
+bin2dig = fst . head . readBin
+oct2dig = fst . head . readOct
+hex2dig = fst . head . readHex
