@@ -1,15 +1,17 @@
 module LispTypes where
+import Data.Array
 
 data LispVal = Atom String
-             | List [LispVal]
-             | DottedList [LispVal] LispVal
-             | Number Integer
-             | Float Float
-             | String String
              | Bool Bool
              | Character Char
-             | Rational Integer Integer
              | Complex Float Float
+             | DottedList [LispVal] LispVal
+             | Float Float
+             | List [LispVal]
+             | Number Integer
+             | Rational Integer Integer
+             | String String
+             | Vector (Array Int LispVal)
 
 -- data LispNum = Int Integer
 --              | Short Float

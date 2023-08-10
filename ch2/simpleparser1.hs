@@ -7,6 +7,7 @@ import Control.Monad (liftM)
 import Numeric (readOct, readBin, readDec, readHex)
 import ParseNumbers (parseExactNumber, parseFloatNumber, parseRationalNumber, parseComplexNumber)
 import LispTypes
+import Data.Array
 
 readExpr :: String -> String
 readExpr input = case parse parseExpr "lisp" input of
@@ -18,14 +19,21 @@ parseExpr = parseAtom
     <|> parseString
     <|> try parseNumber
     <|> parseQuoted
+    <|> parseQuasiQuoted
+    <|> parseUnQuote
+    <|> parseUnQuoteSplicing
     <|> try parseBool
     <|> try parseCharacter
+    <|> try (do
+        string "#("
+        x <- parseVector
+        char ')'
+        return x)
     <|> do 
         char '('
         x <- try parseList <|> parseDottedList
         char ')'
         return x
-
 
 parseString :: Parser LispVal
 parseString = do
@@ -72,11 +80,35 @@ parseDottedList = do
     tail <- char '.' >> spaces >> parseExpr
     return $ DottedList head tail
 
+parseVector :: Parser LispVal
+parseVector = do
+    arrayValues <- sepBy parseExpr spaces
+    return $ Vector (listArray (0, (length arrayValues - 1)) arrayValues)
+
 parseQuoted :: Parser LispVal
 parseQuoted = do
     char '\''
     x <- parseExpr
     return $ List [Atom "quote", x]
+
+parseQuasiQuoted :: Parser LispVal
+parseQuasiQuoted = do
+    char '`'
+    x <- parseExpr
+    return $ List [Atom "quasiquote", x]
+
+parseUnQuote :: Parser LispVal
+parseUnQuote = do
+    char ','
+    x <- parseExpr
+    return $ List [Atom "unquote", x]
+
+parseUnQuoteSplicing :: Parser LispVal
+parseUnQuoteSplicing = do
+    char ','
+    char '@'
+    x <- parseExpr
+    return $ List [Atom "unquote-splicing", x]
 
 symbol :: Parser Char
 symbol = oneOf "!$%&|*+-/:<=>?@^_~"
@@ -96,13 +128,14 @@ escapedChars = do
         'r' -> do return "\r"
 
 showLisp :: LispVal -> String
-showLisp (DottedList l v) = "Dotted list: " ++ showLisp (List l) ++ ", " ++ showLisp v
-showLisp (List l) = "List: " ++ "(" ++ (intercalate ", " $ map showLisp l) ++ ")"
 showLisp (Atom a) = "Atom: " ++ a
-showLisp (Number n) = "Number: " ++ show n
-showLisp (String s) = "String: " ++ s
 showLisp (Bool b) = "Bool: " ++ show b
 showLisp (Character c) = "Char: " ++ [c]
-showLisp (Float f) = "Float: " ++ show f
 showLisp (Complex r i) = "Complex: " ++ show r ++ "+" ++ show i ++ "i"
+showLisp (DottedList l v) = "Dotted list: " ++ showLisp (List l) ++ ", " ++ showLisp v
+showLisp (Float f) = "Float: " ++ show f
+showLisp (List l) = "List: " ++ "(" ++ (intercalate ", " $ map showLisp l) ++ ")"
+showLisp (Number n) = "Number: " ++ show n
 showLisp (Rational n d) = "Rational: " ++ show n ++ "/" ++ show d
+showLisp (String s) = "String: " ++ s
+showLisp (Vector v) = "Vector: " ++ (showLisp $ List $ elems v)
