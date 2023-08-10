@@ -1,5 +1,5 @@
 module SimpleParser1 where
-import Text.ParserCombinators.Parsec hiding (spaces)
+import Text.ParserCombinators.Parsec
 import System.Environment (getArgs)
 import Data.List (intercalate)
 import Data.Functor ((<&>))
@@ -29,11 +29,7 @@ parseExpr = parseAtom
         x <- parseVector
         char ')'
         return x)
-    <|> do 
-        char '('
-        x <- try parseList <|> parseDottedList
-        char ')'
-        return x
+    <|> parseList
 
 parseString :: Parser LispVal
 parseString = do
@@ -72,17 +68,21 @@ parseCharacter = do
         _ -> head val
 
 parseList :: Parser LispVal
-parseList = liftM List $ sepBy parseExpr spaces
+parseList = between beg end parseList'
+           where beg = (char '(' >> skipMany space)
+                 end = (skipMany space >> char ')')
 
-parseDottedList :: Parser LispVal
-parseDottedList = do
-    head <- endBy parseExpr spaces
-    tail <- char '.' >> spaces >> parseExpr
-    return $ DottedList head tail
+parseList' :: Parser LispVal
+parseList' = do 
+    list <- sepEndBy parseExpr spaces
+    maybeDatum <- optionMaybe (char '.' >> spaces >> parseExpr)
+    return $ case maybeDatum of
+                  Nothing -> List list
+                  Just datum  -> DottedList list datum
 
 parseVector :: Parser LispVal
 parseVector = do
-    arrayValues <- sepBy parseExpr spaces
+    arrayValues <- sepBy parseExpr spaces1
     return $ Vector (listArray (0, (length arrayValues - 1)) arrayValues)
 
 parseQuoted :: Parser LispVal
@@ -113,8 +113,8 @@ parseUnQuoteSplicing = do
 symbol :: Parser Char
 symbol = oneOf "!$%&|*+-/:<=>?@^_~"
 
-spaces :: Parser ()
-spaces = skipMany1 space
+spaces1 :: Parser ()
+spaces1 = skipMany1 space
 
 escapedChars :: Parser String
 escapedChars = do
