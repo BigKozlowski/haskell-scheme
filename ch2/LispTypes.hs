@@ -12,8 +12,3 @@ data LispVal = Atom String
              | Rational Integer Integer
              | String String
              | Vector (Array Int LispVal)
-
--- data LispNum = Int Integer
---              | Short Float
---              | Long Double
---              deriving (Show, Eq, Ord)
