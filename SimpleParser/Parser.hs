@@ -9,10 +9,10 @@ import SimpleParser.ParseNumbers (parseExactNumber, parseFloatNumber, parseRatio
 import SimpleParser.LispTypes
 import Data.Array
 
-readExpr :: String -> String
+readExpr :: String -> Either String LispVal
 readExpr input = case parse parseExpr "lisp" input of
-    Left err -> "No match: " ++ show err
-    Right val -> "Found value: " ++ showLisp val
+    Left err -> Left $ "No match: " ++ show err
+    Right val -> Right val
 
 parseExpr :: Parser LispVal
 parseExpr = parseAtom
@@ -126,16 +126,3 @@ escapedChars = do
         't' -> do return "\t"
         'n' -> do return "\n"
         'r' -> do return "\r"
-
-showLisp :: LispVal -> String
-showLisp (Atom a) = "Atom: " ++ a
-showLisp (Bool b) = "Bool: " ++ show b
-showLisp (Character c) = "Char: " ++ [c]
-showLisp (Complex r i) = "Complex: " ++ show r ++ "+" ++ show i ++ "i"
-showLisp (DottedList l v) = "Dotted list: " ++ showLisp (List l) ++ ", " ++ showLisp v
-showLisp (Float f) = "Float: " ++ show f
-showLisp (List l) = "List: " ++ "(" ++ (intercalate ", " $ map showLisp l) ++ ")"
-showLisp (Number n) = "Number: " ++ show n
-showLisp (Rational n d) = "Rational: " ++ show n ++ "/" ++ show d
-showLisp (String s) = "String: " ++ s
-showLisp (Vector v) = "Vector: " ++ (showLisp $ List $ elems v)
