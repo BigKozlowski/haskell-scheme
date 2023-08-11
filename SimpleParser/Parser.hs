@@ -8,11 +8,12 @@ import Numeric (readOct, readBin, readDec, readHex)
 import SimpleParser.ParseNumbers (parseExactNumber, parseFloatNumber, parseRationalNumber, parseComplexNumber)
 import SimpleParser.LispTypes
 import Data.Array
+import Control.Monad.Except (MonadError(throwError))
 
-readExpr :: String -> LispVal
+readExpr :: String -> ThrowsError LispVal
 readExpr input = case parse parseExpr "lisp" input of
-    Left err -> String $ "No match: " ++ show err
-    Right val -> val
+    Left err -> throwError $ Parser err
+    Right val -> return val
 
 parseExpr :: Parser LispVal
 parseExpr = parseAtom

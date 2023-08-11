@@ -1,5 +1,7 @@
 module SimpleParser.LispTypes where
+import Control.Monad.Except
 import Data.Array
+import Text.Parsec (ParseError)
 
 data LispVal = Atom String
              | Bool Bool
@@ -12,3 +14,13 @@ data LispVal = Atom String
              | Rational Integer Integer
              | String String
              | Vector (Array Int LispVal)
+
+data LispErr = NumArgs Integer [LispVal]
+             | TypeMismatch String LispVal
+             | Parser ParseError
+             | BadSpecialForm String LispVal
+             | NotFunction String String
+             | UnboundVar String String
+             | Default String
+
+type ThrowsError = Either LispErr
