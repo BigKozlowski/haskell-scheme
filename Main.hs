@@ -1,11 +1,7 @@
 module Main where
 import System.Environment
 import SimpleParser.Parser (readExpr)
-import Evaluator.Eval (showLisp)
+import Evaluator.Eval (showLisp, eval)
 
 main :: IO ()
-main = do
-    args <- getArgs
-    case readExpr $ head args of
-        Left err -> putStrLn err
-        Right val -> putStrLn $ showLisp val
+main = getArgs >>= putStrLn . showLisp . eval . readExpr . head
