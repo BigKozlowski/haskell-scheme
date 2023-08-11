@@ -21,19 +21,41 @@ primitives = [ ("+", numericBinop (+))
              , ("mod", numericBinop mod)
              , ("quotient", numericBinop mod)
              , ("remainder", numericBinop rem)
+             , ("symbol?", unaryOp symbolp)
+             , ("string?", unaryOp stringp)
+             , ("number?", unaryOp numberp)
+             , ("bool?", unaryOp boolp)
+             , ("list?", unaryOp listp)
              ]
             
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> LispVal
 numericBinop op params = Number $ foldl1 op $ map unpackNum params
 
+unaryOp :: (LispVal -> LispVal) -> [LispVal] -> LispVal
+unaryOp f [v] = f v
+
 unpackNum :: LispVal -> Integer
 unpackNum (Number n) = n
-unpackNum (String n) = let parsed = reads n :: [(Integer, String)] in
-    if null parsed
-        then 0
-        else fst $ head parsed
-unpackNum (List [n]) = unpackNum n
 unpackNum _ = 0
+
+symbolp, numberp, stringp, boolp, listp :: LispVal -> LispVal
+symbolp (Atom _) = Bool True
+symbolp _ = Bool False
+numberp (Number _) = Bool True
+numberp _ = Bool False
+stringp (String _) = Bool True
+stringp _ = Bool False
+boolp (Bool _) = Bool True
+boolp _ = Bool False
+listp (List _ ) = Bool True
+listp (DottedList _ _) = Bool False
+listp _ = Bool False
+
+symbol2string, string2symbol :: LispVal -> LispVal
+symbol2string (Atom s) = String s
+symbol2string _ = String ""
+string2symbol (String s) = Atom s
+string2symbol _ = Atom ""
 
 showLisp :: LispVal -> String
 showLisp (Atom a) = "Atom: " ++ a
