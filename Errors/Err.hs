@@ -1,5 +1,5 @@
 module Errors.Err where
-import SimpleParser.LispTypes (LispErr (UnboundVar, BadSpecialForm, NotFunction, NumArgs, TypeMismatch, Parser), LispVal (List), ThrowsError)
+import SimpleParser.LispTypes
 import Evaluator.Eval
 import Control.Monad.Error.Class (MonadError(catchError))
 
