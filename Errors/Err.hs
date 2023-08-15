@@ -3,9 +3,9 @@ import SimpleParser.LispTypes
 import Evaluator.Eval
 import Control.Monad.Error.Class (MonadError(catchError))
 
-trapError action = catchError (return . show) action
+trapError action = catchError action (return . show)
 
-extractValue :: ThrowsError LispVal -> LispVal
+extractValue :: ThrowsError a -> a
 extractValue (Right val) = val
 
 showError :: LispErr -> String

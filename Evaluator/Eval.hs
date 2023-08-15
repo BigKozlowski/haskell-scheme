@@ -11,13 +11,14 @@ eval val@(Number _) = return val
 eval val@(Bool _) = return val
 eval (List [Atom "quote", val]) = return val
 eval (List ((Atom "cond") : alts)) = cond alts
-eval (List [Atom "if", pred@(Bool _), conseq, alt]) = do
+eval (List [Atom "if", pred, conseq, alt]) = do
     result <- eval pred
     case result of
         Bool False -> eval alt
-        otherwise -> eval conseq
-eval (List [Atom "if", pred, conseq, alt]) = 
-    throwError $ TypeMismatch "boolean" pred
+        Bool True -> eval conseq
+        otherwise -> throwError $ TypeMismatch "boolean" pred
+-- eval (List [Atom "if", pred, conseq, alt]) = 
+--     throwError $ TypeMismatch "boolean" pred
 eval form@(List (Atom "case" : key : clauses)) = 
     if null clauses
         then throwError $ BadSpecialForm "no true clause in case expression: " form
