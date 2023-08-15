@@ -71,6 +71,8 @@ primitives = [ ("+", numericBinop (+))
              , ("eq?", eqv)
              , ("eqv?", eqv)
              , ("equal?", equal)
+             , ("string-length", stringLen)
+             , ("string-ref", stringRef)
              ]
 
 car :: [LispVal] -> ThrowsError LispVal
@@ -132,6 +134,20 @@ cond ((List (condition : val : [])) : alts) = do
 cond ((List a) : _) = throwError $ NumArgs 2 a
 cond (a : _) = throwError $ NumArgs 2 [a]
 cond _ = throwError $ Default "Not viable alternative in cond"
+
+stringLen :: [LispVal] -> ThrowsError LispVal
+stringLen [(String s)] = Right $ Number $ fromIntegral $ length s
+stringLen [notString] = throwError $ TypeMismatch "string" notString
+stringLen badArgList = throwError $ NumArgs 1 badArgList
+
+stringRef :: [LispVal] -> ThrowsError LispVal
+stringRef [(String s), (Number k)]
+    | length s < k' + 1 = throwError $ Default "Out of bounds error"
+    | otherwise = Right $ String $ [s !! k']
+    where k' = fromIntegral k
+stringRef [(String s), notNum] = throwError $ TypeMismatch "number" notNum
+stringRef [notString, _] = throwError $ TypeMismatch "string" notString
+stringRef badArgList = throwError $ NumArgs 2 badArgList
 
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
 numericBinop op [] = throwError $ NumArgs 2 []
