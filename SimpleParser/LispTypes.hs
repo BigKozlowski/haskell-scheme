@@ -13,7 +13,7 @@ data LispVal = Atom String
              | Number Integer
              | Rational Integer Integer
              | String String
-             | Vector (Array Int LispVal)
+             | Vector (Array Int LispVal) deriving (Eq)
 
 data LispErr = NumArgs Integer [LispVal]
              | TypeMismatch String LispVal

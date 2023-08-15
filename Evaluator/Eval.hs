@@ -10,6 +10,7 @@ eval val@(String _) = return val
 eval val@(Number _) = return val
 eval val@(Bool _) = return val
 eval (List [Atom "quote", val]) = return val
+eval (List ((Atom "cond") : alts)) = cond alts
 eval (List [Atom "if", pred@(Bool _), conseq, alt]) = do
     result <- eval pred
     case result of
@@ -17,6 +18,18 @@ eval (List [Atom "if", pred@(Bool _), conseq, alt]) = do
         otherwise -> eval conseq
 eval (List [Atom "if", pred, conseq, alt]) = 
     throwError $ TypeMismatch "boolean" pred
+eval form@(List (Atom "case" : key : clauses)) = 
+    if null clauses
+        then throwError $ BadSpecialForm "no true clause in case expression: " form
+        else case head clauses of
+            List (Atom "else" : exprs) -> mapM eval exprs >>= return . last
+            List ((List datums) : exprs) -> do
+                res <- eval key
+                equality <- mapM (\x -> eqv [res, x]) datums
+                if Bool True `elem` equality
+                    then mapM eval exprs >>= return . last
+                    else eval $ List (Atom "case" : key : tail clauses)
+            _ -> throwError $ BadSpecialForm "ill-formed case expression: " form
 eval (List (Atom func : args)) = mapM eval args >>= apply func
 eval badForm = throwError $ BadSpecialForm "Unrecognized special form" badForm
 
@@ -108,6 +121,17 @@ eqvList eqvFn [(List arg1), (List arg2)] = return $ Bool $ (length arg1 == lengt
             case eqvFn [x1, x2] of
                 Left err -> False
                 Right (Bool val) -> val
+
+cond :: [LispVal] -> ThrowsError LispVal
+cond ((List (Atom "else" : val : [])) : []) = eval val
+cond ((List (condition : val : [])) : alts) = do
+    res <- eval condition
+    boolRes :: Bool <- unpackBool res
+    if boolRes then eval val
+        else cond alts
+cond ((List a) : _) = throwError $ NumArgs 2 a
+cond (a : _) = throwError $ NumArgs 2 [a]
+cond _ = throwError $ Default "Not viable alternative in cond"
 
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
 numericBinop op [] = throwError $ NumArgs 2 []
