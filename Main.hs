@@ -1,19 +1,19 @@
 module Main where
 import System.Environment
 import SimpleParser.Parser (readExpr)
-import Evaluator.Eval (eval, showVal, runIOThrows, liftThrows, primitiveBindings)
+import Evaluator.Eval (eval, showVal, runIOThrows, liftThrows, primitiveBindings, bindVars)
 import SimpleParser.LispTypes (LispErr (UnboundVar), LispVal, ThrowsError, extractValue, nullEnv, Env)
 import Errors.Err (trapError)
 import Control.Monad (liftM)
 import System.IO
+import qualified SimpleParser.LispTypes as Types
 
 main :: IO ()
 main = do
     args <- getArgs
-    case length args of
-        0 -> runRepl
-        1 -> runOne $ head args
-        _ -> putStrLn "Program takes only 0 to 1 argument"
+    if null args
+        then runRepl
+        else runOne $ args
 
 flushStr :: String -> IO()
 flushStr str = putStr str >> hFlush stdout
@@ -34,8 +34,12 @@ until_ pred prompt action = do
         then return ()
         else action result >> until_ pred prompt action
 
-runOne :: String -> IO ()
-runOne expr = primitiveBindings >>= flip evalAndPrint expr
+runOne :: [String] -> IO ()
+runOne args = do
+    env <- primitiveBindings >>= flip bindVars [("args", Types.List $ map Types.String $ drop 1 args)] 
+    (runIOThrows $ liftM show $ eval env (Types.List [Types.Atom "load", Types.String (args !! 0)])) 
+        >>= hPutStrLn stderr
+
 
 runRepl :: IO ()
 runRepl = primitiveBindings >>= until_ (== "quit") (readPrompt "Lisp 0.0.1>>> ") . evalAndPrint

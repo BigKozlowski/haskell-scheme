@@ -4,6 +4,7 @@ import Data.Array
 import Text.Parsec (ParseError)
 import Data.List (intercalate)
 import Data.IORef
+import GHC.IO.Handle (Handle)
 
 type Env = IORef [(String, IORef LispVal)]
 type IOThrowsError = ExceptT LispErr IO
@@ -22,6 +23,8 @@ data LispVal = Atom String
              | PrimitiveFunc ([LispVal] -> ThrowsError LispVal)
              | Func { params :: [String], vararg :: (Maybe String),
                       body :: [LispVal], closure :: Env}
+             | IOFunc ([LispVal] -> IOThrowsError LispVal)
+             | Port Handle
 
 data LispErr = NumArgs Integer [LispVal]
              | TypeMismatch String LispVal
@@ -47,6 +50,8 @@ showVal (Func {params = args, vararg = varargs, body = body, closure = env}) =
       (case varargs of
          Nothing -> ""
          Just arg -> " . " ++ arg) ++ ") ...)"
+showVal (Port _) = "<IO port>"
+showVal (IOFunc _) = "<IO primitive>"
 
 showError :: LispErr -> String
 showError (UnboundVar message varname) = message ++ ": " ++ varname

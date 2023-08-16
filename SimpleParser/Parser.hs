@@ -1,4 +1,4 @@
-module SimpleParser.Parser (readExpr) where
+module SimpleParser.Parser (readExpr, readExprList) where
 import Text.ParserCombinators.Parsec
 import System.Environment (getArgs)
 import Data.List (intercalate)
@@ -10,10 +10,13 @@ import SimpleParser.LispTypes
 import Data.Array
 import Control.Monad.Except (MonadError(throwError))
 
-readExpr :: String -> ThrowsError LispVal
-readExpr input = case parse parseExpr "lisp" input of
-    Left err -> throwError $ Parser err
-    Right val -> return val
+-- readExpr :: String -> ThrowsError LispVal
+-- readExpr input = case parse parseExpr "lisp" input of
+--     Left err -> throwError $ Parser err
+--     Right val -> return val
+
+readExpr = readOrThrow parseExpr
+readExprList = readOrThrow (endBy parseExpr spaces)
 
 parseExpr :: Parser LispVal
 parseExpr = parseAtom
@@ -127,3 +130,8 @@ escapedChars = do
         't' -> do return "\t"
         'n' -> do return "\n"
         'r' -> do return "\r"
+
+readOrThrow :: Parser a -> String -> ThrowsError a
+readOrThrow parser input = case parse parser "lisp" input of
+    Left err -> throwError $ Parser err
+    Right val -> return val
