@@ -2,6 +2,7 @@ module SimpleParser.ParseNumbers where
 import Text.ParserCombinators.Parsec
 import Numeric (readBin, readOct, readHex, readFloat)
 import SimpleParser.LispTypes
+import Data.Functor ((<&>))
 
 parseExactNumber :: Parser LispVal
 parseExactNumber = parseDec
@@ -29,9 +30,9 @@ parseRationalNumber = do
 
 parseComplexNumber :: Parser LispVal
 parseComplexNumber = do
-    r <- (try parseFloatNumber <|> parseExactNumber)
+    r <- try parseFloatNumber <|> parseExactNumber
     char '+'
-    i <- (try parseFloatNumber <|> parseExactNumber)
+    i <- try parseFloatNumber <|> parseExactNumber
     char 'i'
     let r' = case r of
             (Float n) -> n
@@ -42,7 +43,7 @@ parseComplexNumber = do
     return $ Complex r' i'
 
 parseDec :: Parser LispVal
-parseDec = many1 digit >>= (return . Number . read)
+parseDec = many1 digit <&> Number . read
 
 parseDec' :: Parser LispVal
 parseDec' = do 

@@ -21,7 +21,7 @@ data LispVal = Atom String
              | String String
              | Vector (Array Int LispVal)
              | PrimitiveFunc ([LispVal] -> ThrowsError LispVal)
-             | Func { params :: [String], vararg :: (Maybe String),
+             | Func { params :: [String], vararg :: Maybe String,
                       body :: [LispVal], closure :: Env}
              | IOFunc ([LispVal] -> IOThrowsError LispVal)
              | Port Handle
