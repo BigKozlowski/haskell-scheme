@@ -1,21 +1,18 @@
 module Main where
 import System.Environment
 import SimpleParser.Parser (readExpr)
-import Evaluator.Eval (eval, showLisp)
-import SimpleParser.LispTypes (LispErr, LispVal)
-import Errors.Err (showError, extractValue, trapError)
+import Evaluator.Eval (eval, showVal, runIOThrows, liftThrows, primitiveBindings)
+import SimpleParser.LispTypes (LispErr (UnboundVar), LispVal, ThrowsError, extractValue, nullEnv, Env)
+import Errors.Err (trapError)
 import Control.Monad (liftM)
 import System.IO
-
-instance Show LispErr where show = showError
-instance Show LispVal where show = showLisp
 
 main :: IO ()
 main = do
     args <- getArgs
     case length args of
         0 -> runRepl
-        1 -> evalAndPrint $ head args
+        1 -> runOne $ head args
         _ -> putStrLn "Program takes only 0 to 1 argument"
 
 flushStr :: String -> IO()
@@ -24,11 +21,11 @@ flushStr str = putStr str >> hFlush stdout
 readPrompt :: String -> IO String
 readPrompt prompt = flushStr prompt >> getLine
 
-evalString :: String -> IO String
-evalString expr = return $ extractValue $ trapError (liftM show $ readExpr expr >>= eval)
+evalAndPrint :: Env -> String -> IO ()
+evalAndPrint env expr =  evalString env expr >>= putStrLn
 
-evalAndPrint :: String -> IO ()
-evalAndPrint expr = evalString expr >>= putStrLn
+evalString :: Env -> String -> IO String
+evalString env expr = runIOThrows $ liftM show $ (liftThrows $ readExpr expr) >>= eval env
 
 until_ :: Monad m => (a -> Bool) -> m a -> (a -> m ()) -> m ()
 until_ pred prompt action = do
@@ -37,5 +34,8 @@ until_ pred prompt action = do
         then return ()
         else action result >> until_ pred prompt action
 
+runOne :: String -> IO ()
+runOne expr = primitiveBindings >>= flip evalAndPrint expr
+
 runRepl :: IO ()
-runRepl = until_ (== "quit") (readPrompt "Lisp 1 >>> ") evalAndPrint
+runRepl = primitiveBindings >>= until_ (== "quit") (readPrompt "Lisp 0.0.1>>> ") . evalAndPrint
