@@ -4,7 +4,6 @@ import SimpleParser.Parser (readExpr)
 import Evaluator.Eval (eval, showVal, runIOThrows, liftThrows, primitiveBindings, bindVars)
 import SimpleParser.LispTypes (LispErr (UnboundVar), LispVal, ThrowsError, extractValue, nullEnv, Env)
 import Errors.Err (trapError)
-import Control.Monad (liftM)
 import System.IO
 import qualified SimpleParser.LispTypes as Types
 
@@ -16,10 +15,10 @@ main = do
         else runOne args
 
 flushStr :: String -> IO()
-flushStr str = putStr str >> hFlush stdout
+flushStr = (>> hFlush stdout) . putStr
 
 readPrompt :: String -> IO String
-readPrompt prompt = flushStr prompt >> getLine
+readPrompt = (>> getLine) . flushStr
 
 evalAndPrint :: Env -> String -> IO ()
 evalAndPrint env expr =  evalString env expr >>= putStrLn

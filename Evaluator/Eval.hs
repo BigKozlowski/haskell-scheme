@@ -3,7 +3,7 @@ import SimpleParser.LispTypes
 import Data.List
 import Data.Array
 import Control.Monad.Except
-import Control.Monad (liftM)
+import Control.Monad ((<=<))
 import Data.IORef
 import GHC.Utils.Monad (liftIO)
 import Errors.Err (trapError)
@@ -82,7 +82,7 @@ readContents :: [LispVal] -> IOThrowsError LispVal
 readContents [String filename] = fmap String $ liftIO $ readFile filename
 
 load :: String -> IOThrowsError [LispVal]
-load filename = liftIO (readFile filename) >>= liftThrows . readExprList
+load = (liftThrows . readExprList) <=< liftIO . readFile
 
 readAll :: [LispVal] -> IOThrowsError LispVal
 readAll [String filename] = List <$> load filename
@@ -290,7 +290,7 @@ liftThrows (Left err) = throwError err
 liftThrows (Right val) = return val
 
 runIOThrows :: IOThrowsError String -> IO String
-runIOThrows action = runExceptT (trapError action) <&> extractValue
+runIOThrows = (<&> extractValue) . runExceptT . trapError
 
 isBound :: Env -> String -> IO Bool
 isBound envRef var = readIORef envRef <&> isJust . lookup var

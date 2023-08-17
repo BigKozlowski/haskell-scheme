@@ -3,7 +3,6 @@ import Text.ParserCombinators.Parsec
 import System.Environment (getArgs)
 import Data.List (intercalate)
 import Data.Functor ((<&>))
-import Control.Monad (liftM)
 import Numeric (readOct, readBin, readDec, readHex)
 import SimpleParser.ParseNumbers (parseExactNumber, parseFloatNumber, parseRationalNumber, parseComplexNumber)
 import SimpleParser.LispTypes
