@@ -2,10 +2,15 @@ module Main where
 import System.Environment ( getArgs )
 import SimpleParser.Parser (readExpr)
 import Evaluator.Eval (eval, showVal, runIOThrows, liftThrows, primitiveBindings, bindVars)
-import SimpleParser.LispTypes (LispErr (UnboundVar), LispVal, ThrowsError, extractValue, nullEnv, Env)
+import SimpleParser.LispTypes
+    (LispErr (UnboundVar)
+    , ThrowsError
+    , extractValue
+    , nullEnv
+    , Env
+    , LispVal (List, String, Atom))
 import Errors.Err (trapError)
 import System.IO ( hFlush, stdout, hPutStrLn, stderr )
-import qualified SimpleParser.LispTypes as Types
 
 main :: IO ()
 main = do
@@ -35,8 +40,8 @@ until_ pred prompt action = do
 
 runOne :: [String] -> IO ()
 runOne args = do
-    env <- primitiveBindings >>= flip bindVars [("args", Types.List $ map Types.String $ drop 1 args)] 
-    runIOThrows (show <$> eval env (Types.List [Types.Atom "load", Types.String (head args)])) 
+    env <- primitiveBindings >>= flip bindVars [("args", List $ map String $ drop 1 args)] 
+    runIOThrows (show <$> eval env (List [Atom "load", String (head args)])) 
         >>= hPutStrLn stderr
 
 
