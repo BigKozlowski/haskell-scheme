@@ -1,10 +1,10 @@
 module Main where
-import System.Environment
+import System.Environment ( getArgs )
 import SimpleParser.Parser (readExpr)
 import Evaluator.Eval (eval, showVal, runIOThrows, liftThrows, primitiveBindings, bindVars)
 import SimpleParser.LispTypes (LispErr (UnboundVar), LispVal, ThrowsError, extractValue, nullEnv, Env)
 import Errors.Err (trapError)
-import System.IO
+import System.IO ( hFlush, stdout, hPutStrLn, stderr )
 import qualified SimpleParser.LispTypes as Types
 
 main :: IO ()

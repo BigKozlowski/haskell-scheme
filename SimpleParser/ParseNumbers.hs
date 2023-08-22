@@ -1,7 +1,9 @@
 module SimpleParser.ParseNumbers where
 import Text.ParserCombinators.Parsec
+    ( char, digit, string, many1, (<|>), Parser, try )
 import Numeric (readBin, readOct, readHex, readFloat)
 import SimpleParser.LispTypes
+    ( LispVal(Number, Rational, Float, Complex) )
 import Data.Functor ((<&>))
 
 parseExactNumber :: Parser LispVal

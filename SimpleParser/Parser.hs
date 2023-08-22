@@ -1,12 +1,39 @@
 module SimpleParser.Parser (readExpr, readExprList) where
 import Text.ParserCombinators.Parsec
+    ( alphaNum,
+      anyChar,
+      char,
+      digit,
+      letter,
+      noneOf,
+      oneOf,
+      space,
+      spaces,
+      string,
+      between,
+      endBy,
+      many1,
+      notFollowedBy,
+      optionMaybe,
+      sepBy,
+      sepEndBy,
+      skipMany1,
+      (<|>),
+      many,
+      parse,
+      skipMany,
+      Parser,
+      try )
 import System.Environment (getArgs)
 import Data.List (intercalate)
 import Data.Functor ((<&>))
 import Numeric (readOct, readBin, readDec, readHex)
 import SimpleParser.ParseNumbers (parseExactNumber, parseFloatNumber, parseRationalNumber, parseComplexNumber)
 import SimpleParser.LispTypes
-import Data.Array
+    ( LispErr(Parser),
+      LispVal(Atom, String, Bool, Character, DottedList, Vector, List),
+      ThrowsError )
+import Data.Array ( listArray )
 import Control.Monad.Except (MonadError(throwError))
 
 -- readExpr :: String -> ThrowsError LispVal

@@ -1,9 +1,9 @@
 module SimpleParser.LispTypes where
-import Control.Monad.Except
-import Data.Array
+import Control.Monad.Except ( ExceptT )
+import Data.Array ( Array )
 import Text.Parsec (ParseError)
 import Data.List (intercalate)
-import Data.IORef
+import Data.IORef ( IORef, newIORef )
 import GHC.IO.Handle (Handle)
 
 type Env = IORef [(String, IORef LispVal)]

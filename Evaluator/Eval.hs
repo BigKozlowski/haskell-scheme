@@ -1,14 +1,30 @@
 module Evaluator.Eval (showVal, eval, runIOThrows, liftThrows, primitiveBindings, bindVars) where
 import SimpleParser.LispTypes
-import Data.List
-import Data.Array
+    ( extractValue,
+      nullEnv,
+      showVal,
+      Env,
+      IOThrowsError,
+      LispErr(UnboundVar, BadSpecialForm, Default, NumArgs,
+              TypeMismatch),
+      LispVal(Atom, Port, IOFunc, PrimitiveFunc, Func, Number, List,
+              DottedList, Bool, String),
+      ThrowsError )
 import Control.Monad.Except
+    ( runExceptT, MonadError(throwError, catchError) )
 import Control.Monad ((<=<))
-import Data.IORef
+import Data.IORef ( newIORef, readIORef, writeIORef )
 import GHC.Utils.Monad (liftIO)
 import Errors.Err (trapError)
 import System.IO
-import SimpleParser.Parser
+    ( hClose,
+      hGetLine,
+      stdin,
+      stdout,
+      IOMode(WriteMode, ReadMode),
+      openFile,
+      hPrint )
+import SimpleParser.Parser ( readExpr, readExprList )
 import Data.Maybe (isNothing, isJust)
 import Data.Functor ((<&>))
 
